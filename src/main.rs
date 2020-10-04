@@ -22,16 +22,16 @@ enum Symbol {
 /*
     Orders
 */
-struct Order<'a> {
+struct Order {
     id: Uuid,
     direction: Direction,
     symbol: Symbol,
     shares: usize,
-    limit: f32,
+    limit: f64,
     entry_time: Option<std::time::Instant>,
     event_time: Option<std::time::Duration>,
-    next: Option<Box<&'a Order<'a>>>,
-    previous: Option<Box<&'a Order<'a>>>,
+    next: Option<Box<Order>>,
+    previous: Option<Box<Order>>,
 }
 
 /*
@@ -45,18 +45,47 @@ struct Order<'a> {
     We store head and tail of order to get O(1) constant time lookup
     and insertion for head or tail
 */
-struct Limit<'a> {
-    price: &'a f64,
-    left: Option<&'a Limit<'a>>,
-    right: Option<&'a Limit<'a>>,
-    head: Option<Box<&'a Order<'a>>>,
-    tail: Option<Box<&'a Order<'a>>>,
+struct Limit {
+    price: u32,
+    left: Option<Box<Limit>>,
+    right: Option<Box<Limit>>,
+    head: Option<Box<Order>>,
+    tail: Option<Box<Order>>,
 }
 
-impl<'a> Limit<'a> {
-    pub fn insert(&self, order: &f32) -> Result<(), Box<dyn Error>> {
-        println!("Not implemented!");
-        Ok(())
+impl Limit {
+    fn new(price: u32) -> Limit {
+        Limit {
+            price: price,
+            left: None,
+            right: None,
+            head: None,
+            tail: None,
+        }
+    }
+
+    fn insert(&mut self, price: u32) {
+        let new_node = Some(Box::new(Limit::new(price)));
+        if price < self.price {
+            match self.left.as_mut() {
+                None => self.left = new_node,
+                Some(left) => left.insert(price),
+            }
+        } else {
+            match self.right.as_mut() {
+                None => self.right = new_node,
+                Some(right) => right.insert(price),
+            }
+        }
+    }
+
+    fn search(&self, target: u32) -> Option<u32> {
+        match self.price {
+            value if target == value => Some(value),
+            value if target < value => self.left.as_ref()?.search(target),
+            value if target > value => self.right.as_ref()?.search(target),
+            _ => None,
+        }
     }
 }
 
@@ -65,10 +94,10 @@ impl<'a> Limit<'a> {
     that are implemented as binary trees
 */
 struct Book<'a> {
-    buy: Option<&'a Limit<'a>>,
-    sell: Option<&'a Limit<'a>>,
-    lowest: Option<&'a Order<'a>>,
-    highest: Option<&'a Order<'a>>,
+    buy: Option<&'a Limit>,
+    sell: Option<&'a Limit>,
+    lowest: Option<&'a Order>,
+    highest: Option<&'a Order>,
 }
 
 /*
