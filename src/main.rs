@@ -1,3 +1,5 @@
+use std::error::Error;
+use std::time::{Duration, Instant};
 use uuid::Uuid;
 
 /*
@@ -17,34 +19,73 @@ enum Symbol {
     GOOG,
 }
 
-struct Order {
+/*
+    Orders
+*/
+struct Order<'a> {
     id: Uuid,
     direction: Direction,
     symbol: Symbol,
     shares: usize,
     limit: f32,
-    entry_time: f64,
-    event_time: f64,
-    next: Box<Option<Order>>,
-    previous: Box<Option<Order>>,
-    parrent_limit: Box<Option<Limit>>,
+    entry_time: Option<std::time::Instant>,
+    event_time: Option<std::time::Duration>,
+    next: Option<Box<&'a Order<'a>>>,
+    previous: Option<Box<&'a Order<'a>>>,
 }
 
-struct Limit {
-    price: f64,
-    size: u32,   // is this needed?
-    volume: u32, // is this needed?
-    parrent: Box<Option<Limit>>,
-    left_child: Box<Option<Limit>>,
-    right_child: Box<Option<Limit>>,
-    head_order: Box<Option<Order>>,
-    tail_order: Box<Option<Order>>,
+/*
+    A Limit represent a price point
+    example: 100.0 USD
+
+    We will create a binary tree of limits
+
+    Each Limit is a FIFO queue of orders for that price point.Limit
+
+    We store head and tail of order to get O(1) constant time lookup
+    and insertion for head or tail
+*/
+struct Limit<'a> {
+    price: &'a f64,
+    left: Option<&'a Limit<'a>>,
+    right: Option<&'a Limit<'a>>,
+    head: Option<Box<&'a Order<'a>>>,
+    tail: Option<Box<&'a Order<'a>>>,
 }
 
-struct Book {
-    // not implemented
+impl<'a> Limit<'a> {
+    pub fn insert(&self, order: &f32) -> Result<(), Box<dyn Error>> {
+        println!("Not implemented!");
+        Ok(())
+    }
 }
 
-fn main() {
-    println!("Hello, world!");
+/*
+    A Book is a representation of the order book which consist of buy orders and sell orders
+    that are implemented as binary trees
+*/
+struct Book<'a> {
+    buy: Option<&'a Limit<'a>>,
+    sell: Option<&'a Limit<'a>>,
+    lowest: Option<&'a Order<'a>>,
+    highest: Option<&'a Order<'a>>,
+}
+
+/*
+    Initiate new empty Book
+*/
+impl<'a> Book<'a> {
+    pub fn new() -> Book<'a> {
+        Book {
+            buy: None,
+            sell: None,
+            lowest: None,
+            highest: None,
+        }
+    }
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let book = Book::new();
+    Ok(())
 }
