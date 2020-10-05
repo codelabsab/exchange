@@ -27,11 +27,32 @@ struct Order {
     direction: Direction,
     symbol: Symbol,
     shares: usize,
-    limit: f64,
+    limit: u32,
     entry_time: Option<std::time::Instant>,
-    event_time: Option<std::time::Duration>,
+    event_time: Option<std::time::Instant>,
+    duration: Option<std::time::Duration>,
     next: Option<Box<Order>>,
     previous: Option<Box<Order>>,
+}
+
+impl Order {
+    /*
+        Add new Order and attach to correct Limit. If Limit doesn't exist we need to create it.
+    */
+    fn new(direction: Direction, symbol: Symbol, shares: usize, limit: u32, price: u32) -> Order {
+        Order {
+            id: Uuid::new_v4(),
+            direction: direction,
+            symbol: symbol,
+            shares: shares,
+            limit: limit,
+            entry_time: None,
+            event_time: Some(Instant::now()),
+            duration: None,
+            next: None,
+            previous: None,
+        }
+    }
 }
 
 /*
