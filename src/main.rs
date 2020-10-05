@@ -115,6 +115,7 @@ impl Limit {
     that are implemented as binary trees
 */
 struct Book<'a> {
+    symbol: Symbol,
     buy: Option<&'a Limit>,
     sell: Option<&'a Limit>,
     lowest: Option<&'a Order>,
