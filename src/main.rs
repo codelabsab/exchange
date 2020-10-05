@@ -26,7 +26,7 @@ struct Order {
     id: Uuid,
     direction: Direction,
     symbol: Symbol,
-    shares: usize,
+    shares: u32,
     limit: u32,
     entry_time: Option<std::time::Instant>,
     event_time: Option<std::time::Instant>,
@@ -39,13 +39,13 @@ impl Order {
     /*
         Add new Order and attach to correct Limit. If Limit doesn't exist we need to create it.
     */
-    fn new(direction: Direction, symbol: Symbol, shares: usize, limit: u32, price: u32) -> Order {
+    fn new(direction: Direction, symbol: Symbol, shares: u32, limit: u32) -> Order {
         Order {
             id: Uuid::new_v4(),
-            direction: direction,
-            symbol: symbol,
-            shares: shares,
-            limit: limit,
+            direction,
+            symbol,
+            shares,
+            limit,
             entry_time: None,
             event_time: Some(Instant::now()),
             duration: None,
@@ -138,6 +138,21 @@ impl<'a> Book<'a> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let book = Book::new();
+    // Limit Order Book for AAPL
+    let mut book1 = Book::new(Symbol::AAPL);
+    book1.symbol = Symbol::AAPL;
+
+    // Order1
+    let order1 = Order::new(Direction::Buy, Symbol::AAPL, 100, 116);
+    let mut limit1 = Limit::new(116);
+    limit1.insert(order1.limit);
+
+    // add Limit to Book
+    book1.buy = Some(&limit1);
+
+    // Order 2
+    let order2 = Order::new(Direction::Buy, Symbol::AAPL, 50, 116);
+    let mut limit2 = Limit::new(order2.limit);
+    limit2.insert(order1.limit);
     Ok(())
 }
