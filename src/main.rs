@@ -126,8 +126,9 @@ struct Book<'a> {
     Initiate new empty Book
 */
 impl<'a> Book<'a> {
-    pub fn new() -> Book<'a> {
+    pub fn new(symbol: Symbol) -> Book<'a> {
         Book {
+            symbol,
             buy: None,
             sell: None,
             lowest: None,
